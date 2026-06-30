@@ -80,9 +80,13 @@ When bumping the version, update all three locations:
 
 ## Current Version
 
-**1.0.0** — initial release, split out of Perimetre Core.
+**1.0.1**
 
 ## Changelog
+
+### 1.0.1
+
+- Maintenance release. Bumped the release workflow's `action-gh-release` to v3 (Node 24 runtime). No functional or plugin-code changes.
 
 ### 1.0.0
 - Initial release. Status endpoint and Remote Login extracted from Perimetre Core (where they shipped through v1.15.0). Option keys are unchanged, so existing settings carry over.
