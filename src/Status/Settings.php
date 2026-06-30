@@ -21,9 +21,11 @@ final class Settings
     public const SECTION_ID = 'perimetre_status_section';
 
     /**
-     * Internal page slug used with `add_settings_section`/`do_settings_sections`
-     * so the Status fields only render on the Status tab. The form still
-     * submits under the `perimetre-wp-tools` option group (PAGE_SLUG).
+     * Slug used both as this tab's `do_settings_sections` page (so the Status
+     * fields only render on the Status tab) AND as its dedicated option group.
+     * Each tab having its own option group is what keeps the two tabs fully
+     * independent: submitting one tab makes `options.php` iterate only that
+     * group's options, so it can never null out / reset the other tab's values.
      */
     public const SECTION_PAGE = 'perimetre-wp-tools-status';
 
@@ -63,7 +65,7 @@ final class Settings
         echo '<h1>' . esc_html__('Perimetre WP Tools', 'perimetre-wp-tools') . '</h1>';
         Tabs::render($active);
         echo '<form method="post" action="options.php">';
-        settings_fields(self::PAGE_SLUG);
+        settings_fields($section_page);
         do_settings_sections($section_page);
         submit_button();
         echo '</form>';
@@ -80,7 +82,7 @@ final class Settings
         );
 
         // Enabled checkbox
-        register_setting(self::PAGE_SLUG, self::OPTION_ENABLED, [
+        register_setting(self::SECTION_PAGE, self::OPTION_ENABLED, [
             'type' => 'boolean',
             'default' => false,
             'sanitize_callback' => [self::class, 'sanitize_enabled'],
@@ -94,7 +96,7 @@ final class Settings
         );
 
         // Slug text field
-        register_setting(self::PAGE_SLUG, self::OPTION_SLUG, [
+        register_setting(self::SECTION_PAGE, self::OPTION_SLUG, [
             'type' => 'string',
             'default' => self::DEFAULT_SLUG,
             'sanitize_callback' => [self::class, 'sanitize_slug'],
@@ -108,7 +110,7 @@ final class Settings
         );
 
         // Secret token
-        register_setting(self::PAGE_SLUG, self::OPTION_TOKEN, [
+        register_setting(self::SECTION_PAGE, self::OPTION_TOKEN, [
             'type' => 'string',
             'default' => '',
             'sanitize_callback' => [self::class, 'sanitize_token'],

@@ -25,9 +25,11 @@ final class Settings
     public const OPTION_CONNECTED_AT = 'perimetre_remote_login_connected_at';
 
     /**
-     * Internal page slug for `add_settings_section`/`do_settings_sections`.
-     * Lets Status\Settings render this tab's fields in isolation. The form
-     * still submits under the `perimetre-wp-tools` option group (PAGE_SLUG).
+     * Slug used both as this tab's `do_settings_sections` page (lets
+     * Status\Settings render this tab's fields in isolation) AND as its
+     * dedicated option group. A per-tab option group is what keeps the two
+     * tabs independent: submitting the Status tab can never null out the
+     * Remote Login values (enabled checkbox, portal URL), and vice versa.
      */
     public const SECTION_PAGE = 'perimetre-wp-tools-remote-login';
 
@@ -51,7 +53,7 @@ final class Settings
             self::SECTION_PAGE
         );
 
-        register_setting(self::PAGE_SLUG, self::OPTION_ENABLED, [
+        register_setting(self::SECTION_PAGE, self::OPTION_ENABLED, [
             'type'              => 'boolean',
             'default'           => false,
             'sanitize_callback' => [self::class, 'sanitize_bool'],
@@ -64,7 +66,7 @@ final class Settings
             self::SECTION_ID
         );
 
-        register_setting(self::PAGE_SLUG, self::OPTION_PORTAL_URL, [
+        register_setting(self::SECTION_PAGE, self::OPTION_PORTAL_URL, [
             'type'              => 'string',
             'default'           => '',
             'sanitize_callback' => [self::class, 'sanitize_url'],
@@ -77,7 +79,7 @@ final class Settings
             self::SECTION_ID
         );
 
-        register_setting(self::PAGE_SLUG, self::OPTION_API_KEY, [
+        register_setting(self::SECTION_PAGE, self::OPTION_API_KEY, [
             'type'              => 'string',
             'default'           => '',
             'sanitize_callback' => [self::class, 'sanitize_api_key'],
