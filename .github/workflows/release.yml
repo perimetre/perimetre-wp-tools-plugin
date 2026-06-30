@@ -34,7 +34,7 @@ jobs:
           cd dist && zip -r perimetre-wp-tools-${{ steps.version.outputs.VERSION }}.zip perimetre-wp-tools/
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: "Perimetre WP Tools ${{ github.ref_name }}"
           files: dist/perimetre-wp-tools-${{ steps.version.outputs.VERSION }}.zip
