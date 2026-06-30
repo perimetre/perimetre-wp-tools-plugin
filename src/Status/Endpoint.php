@@ -96,12 +96,44 @@ final class Endpoint
         exit;
     }
 
+    /**
+     * Flush rewrite rules when needed. Runs on every admin page load.
+     *
+     * Two triggers:
+     *   1. The explicit flag set when the enable toggle or slug changes.
+     *   2. Self-heal: the endpoint is enabled but its rule is missing from the
+     *      persisted rewrite table. This covers cases the one-shot flag misses —
+     *      enabling via WP-CLI/`update_option` (no flag set), or a flag consumed
+     *      on a request where the rule wasn't yet registered — which otherwise
+     *      leave `/{slug}/` returning a 404 until a manual permalink flush.
+     */
     public static function maybe_flush_rewrite_rules(): void
     {
-        if (get_option('perimetre_status_flush_rewrite')) {
+        $needs_flush = (bool) get_option('perimetre_status_flush_rewrite');
+
+        if (! $needs_flush && Settings::is_enabled() && ! self::rule_is_registered()) {
+            $needs_flush = true;
+        }
+
+        if ($needs_flush) {
             delete_option('perimetre_status_flush_rewrite');
             flush_rewrite_rules();
         }
+    }
+
+    /**
+     * Whether the current status rewrite rule is present in the persisted
+     * rewrite table (so we don't flush on every admin request once it is).
+     */
+    private static function rule_is_registered(): bool
+    {
+        $rules = get_option('rewrite_rules');
+        if (! is_array($rules)) {
+            return false;
+        }
+        $pattern = '^' . preg_quote(Settings::get_slug(), '/') . '/?$';
+
+        return isset($rules[$pattern]);
     }
 
     /**

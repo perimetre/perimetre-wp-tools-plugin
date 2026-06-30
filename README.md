@@ -80,9 +80,13 @@ When bumping the version, update all three locations:
 
 ## Current Version
 
-**1.0.2**
+**1.0.3**
 
 ## Changelog
+
+### 1.0.3
+
+- **Fixed the status endpoint returning a 404 after being enabled.** The rewrite rule relied on a one-shot flush flag that could be missed (e.g. enabling via WP-CLI, or the flag being consumed on a request before the rule was registered), leaving `/{slug}/` un-routed until a manual permalink flush. The flush logic now self-heals: on any admin page load, if the endpoint is enabled but its rule is absent from the rewrite table, it flushes automatically.
 
 ### 1.0.2
 

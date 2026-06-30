@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Perimetre WP Tools
  * Description: Status / health-check endpoint and Helm portal remote login for Perimetre WordPress sites.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Perimetre
  * Author URI: https://perimetre.co
  * Requires at least: 6.4
@@ -18,7 +18,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-define('PERIMETRE_WP_TOOLS_VERSION', '1.0.2');
+define('PERIMETRE_WP_TOOLS_VERSION', '1.0.3');
 define('PERIMETRE_WP_TOOLS_FILE', __FILE__);
 define('PERIMETRE_WP_TOOLS_PATH', plugin_dir_path(__FILE__));
 define('PERIMETRE_WP_TOOLS_URL', plugin_dir_url(__FILE__));
