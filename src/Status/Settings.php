@@ -162,6 +162,20 @@ final class Settings
             esc_html__('The endpoint will be available at %s', 'perimetre-wp-tools'),
             '<code>' . esc_html(home_url($slug . '/')) . '</code>'
         ) . '</p>';
+
+        $conflict = self::slug_conflict($slug);
+        if ($conflict !== null) {
+            $message = $conflict === 'page'
+                /* translators: %s: the conflicting URL path */
+                ? __('⚠ The path %s is already used by an existing page on this site, so the health-check endpoint is disabled to avoid breaking it. Choose a different slug.', 'perimetre-wp-tools')
+                /* translators: %s: the conflicting URL path */
+                : __('⚠ The path %s is already used by an existing category or term on this site, so the health-check endpoint is disabled to avoid breaking it. Choose a different slug.', 'perimetre-wp-tools');
+
+            echo '<p class="description" style="color:#b32d2e;font-weight:600;">' . sprintf(
+                esc_html($message),
+                '<code>' . esc_html('/' . $slug . '/') . '</code>'
+            ) . '</p>';
+        }
     }
 
     public static function render_token_field(): void
@@ -206,6 +220,34 @@ final class Settings
     public static function get_slug(): string
     {
         return (string) get_option(self::OPTION_SLUG, self::DEFAULT_SLUG);
+    }
+
+    /**
+     * Whether the given top-level path is already claimed by existing content,
+     * so the endpoint must yield rather than shadow it with a `top` rewrite
+     * rule. Returns the conflicting content type ('page' or 'term') or null.
+     *
+     * Uses DB-backed lookups that don't depend on the rewrite table, so this is
+     * safe to call before the endpoint's own rule is registered. Callers must
+     * run on/after `init` so public taxonomies are registered for the term scan.
+     */
+    public static function slug_conflict(string $slug): ?string
+    {
+        if ($slug === '') {
+            return null;
+        }
+
+        if (get_page_by_path($slug, OBJECT, 'page') instanceof \WP_Post) {
+            return 'page';
+        }
+
+        foreach (get_taxonomies(['public' => true]) as $taxonomy) {
+            if (get_term_by('slug', $slug, $taxonomy) instanceof \WP_Term) {
+                return 'term';
+            }
+        }
+
+        return null;
     }
 
     public static function get_token(): string

@@ -80,9 +80,13 @@ When bumping the version, update all three locations:
 
 ## Current Version
 
-**1.0.3**
+**1.0.4**
 
 ## Changelog
+
+### 1.0.4
+
+- **The status endpoint no longer shadows existing content at its path.** When the configured slug already belongs to a published page or a public taxonomy term (e.g. a real `/status/` page on a site using `/%category%/%postname%/` permalinks), the endpoint now **yields** — it skips registering its `top`-priority rewrite rule instead of hijacking the URL — and the Status settings tab shows an inline warning prompting you to choose a different slug. On upgrade, any previously claimed-but-conflicting rule is automatically flushed out, restoring the shadowed page. The slug remains configurable and defaults to `status`.
 
 ### 1.0.3
 

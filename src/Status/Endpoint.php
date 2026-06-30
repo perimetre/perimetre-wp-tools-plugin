@@ -13,9 +13,11 @@ final class Endpoint
 
     public static function register(): void
     {
-        // Only claim the URL path when the endpoint is enabled.
+        // Only claim the URL path when the endpoint is enabled. Register the
+        // rewrite rule late on `init` (priority 20) so public taxonomies are
+        // registered before `add_rewrite_rule` runs its slug-conflict check.
         if (Settings::is_enabled()) {
-            add_action('init', [self::class, 'add_rewrite_rule']);
+            add_action('init', [self::class, 'add_rewrite_rule'], 20);
             add_filter('query_vars', [self::class, 'add_query_var']);
         }
 
@@ -35,7 +37,8 @@ final class Endpoint
         }
 
         // Rewrite rule isn't registered yet at activation time,
-        // so register it before flushing.
+        // so register it before flushing. add_rewrite_rule() yields on its
+        // own if the configured path already belongs to existing content.
         self::add_rewrite_rule();
         flush_rewrite_rules();
     }
@@ -43,6 +46,13 @@ final class Endpoint
     public static function add_rewrite_rule(): void
     {
         $slug = Settings::get_slug();
+
+        // Yield to existing content: never shadow a page/term that already
+        // lives at this path with our `top` rule.
+        if (Settings::slug_conflict($slug) !== null) {
+            return;
+        }
+
         add_rewrite_rule(
             '^' . preg_quote($slug, '/') . '/?$',
             'index.php?' . self::QUERY_VAR . '=1',
@@ -99,19 +109,28 @@ final class Endpoint
     /**
      * Flush rewrite rules when needed. Runs on every admin page load.
      *
-     * Two triggers:
+     * Triggers:
      *   1. The explicit flag set when the enable toggle or slug changes.
-     *   2. Self-heal: the endpoint is enabled but its rule is missing from the
-     *      persisted rewrite table. This covers cases the one-shot flag misses —
-     *      enabling via WP-CLI/`update_option` (no flag set), or a flag consumed
-     *      on a request where the rule wasn't yet registered — which otherwise
-     *      leave `/{slug}/` returning a 404 until a manual permalink flush.
+     *   2. Self-heal (add): the endpoint should be active but its rule is
+     *      missing from the persisted rewrite table. This covers cases the
+     *      one-shot flag misses — enabling via WP-CLI/`update_option` (no flag
+     *      set), or a flag consumed on a request where the rule wasn't yet
+     *      registered — which otherwise leave `/{slug}/` returning a 404 until
+     *      a manual permalink flush.
+     *   3. Self-heal (remove): the endpoint should NOT be active (disabled, or
+     *      the path now belongs to existing content) but a stale rule is still
+     *      present. Flushing drops it, restoring the shadowed content — e.g. on
+     *      upgrade to a build that yields to a pre-existing `/{slug}/` page.
      */
     public static function maybe_flush_rewrite_rules(): void
     {
         $needs_flush = (bool) get_option('perimetre_status_flush_rewrite');
 
-        if (! $needs_flush && Settings::is_enabled() && ! self::rule_is_registered()) {
+        $should_be_active = Settings::is_enabled()
+            && Settings::slug_conflict(Settings::get_slug()) === null;
+        $rule_present = self::rule_is_registered();
+
+        if (! $needs_flush && $should_be_active !== $rule_present) {
             $needs_flush = true;
         }
 
