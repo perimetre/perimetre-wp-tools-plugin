@@ -80,9 +80,13 @@ When bumping the version, update all three locations:
 
 ## Current Version
 
-**1.0.1**
+**1.0.2**
 
 ## Changelog
+
+### 1.0.2
+
+- **Fixed a fatal error when this plugin and Perimetre Core are both active.** Both bundled an identically-named Composer autoloader bootstrap class (a side effect of the split), so whichever activated second hit `Cannot declare class ComposerAutoloaderInit…`. This plugin now uses a unique autoloader suffix (`config.autoloader-suffix`).
 
 ### 1.0.1
 
