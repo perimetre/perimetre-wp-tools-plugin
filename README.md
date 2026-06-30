@@ -80,9 +80,13 @@ When bumping the version, update all three locations:
 
 ## Current Version
 
-**1.0.4**
+**1.0.5**
 
 ## Changelog
+
+### 1.0.5
+
+- **Fixed the Status and Remote Login tabs clobbering each other on save.** Both tabs shared a single Settings API option group, so submitting one tab made WordPress process the other tab's options too — resetting its values (the enable checkbox, the portal URL, and even regenerating the status token) because those fields weren't present in the submitted form. Each tab now uses its own dedicated option group, so the two are fully independent: saving one never touches the other.
 
 ### 1.0.4
 
