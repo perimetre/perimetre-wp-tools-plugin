@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<ruleset name="Perimetre WP Tools">
+    <description>PSR-12 coding standard for Perimetre WP Tools.</description>
+
+    <rule ref="PSR12">
+        <!-- WordPress convention: snake_case method names are intentional -->
+        <exclude name="PSR1.Methods.CamelCapsMethodName.NotCamelCaps"/>
+    </rule>
+
+    <!-- Plugin entry point necessarily defines constants and executes side effects -->
+    <rule ref="PSR1.Files.SideEffects.FoundWithSymbols">
+        <exclude-pattern>perimetre-wp-tools.php</exclude-pattern>
+    </rule>
+
+    <file>src/</file>
+    <file>perimetre-wp-tools.php</file>
+
+    <arg name="colors"/>
+    <arg value="sp"/>
+</ruleset>

@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  release:
+    name: Build and release plugin zip
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Build plugin zip
+        run: |
+          mkdir -p dist/perimetre-wp-tools
+          rsync -a --exclude='.git' --exclude='.github' --exclude='dist' --exclude='.DS_Store' --exclude='.gitignore' --exclude='CLAUDE.md' . dist/perimetre-wp-tools/
+          cd dist && zip -r perimetre-wp-tools-${{ steps.version.outputs.VERSION }}.zip perimetre-wp-tools/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Perimetre WP Tools ${{ github.ref_name }}"
+          files: dist/perimetre-wp-tools-${{ steps.version.outputs.VERSION }}.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

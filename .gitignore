@@ -1,0 +1,12 @@
+# Composer dependencies — vendor is committed because it contains
+# only the generated autoloader, no third-party packages.
+# Do not add vendor/ here.
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp

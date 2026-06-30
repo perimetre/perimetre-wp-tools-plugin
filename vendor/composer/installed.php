@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'name' => 'perimetre/perimetre-core',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '80efaf37926af099d3135b313729a9b929c7e59f',
+        'type' => 'wordpress-plugin',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => true,
+    ),
+    'versions' => array(
+        'perimetre/perimetre-core' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '80efaf37926af099d3135b313729a9b929c7e59f',
+            'type' => 'wordpress-plugin',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'squizlabs/php_codesniffer' => array(
+            'pretty_version' => '3.13.5',
+            'version' => '3.13.5.0',
+            'reference' => '0ca86845ce43291e8f5692c7356fccf3bcf02bf4',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../squizlabs/php_codesniffer',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
+        'yahnis-elsts/plugin-update-checker' => array(
+            'pretty_version' => 'v5.6',
+            'version' => '5.6.0.0',
+            'reference' => 'a2db6871deec989a74e1f90fafc6d58ae526a879',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../yahnis-elsts/plugin-update-checker',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+    ),
+);
