@@ -47,6 +47,15 @@ Enable it on the **Remote Login** tab. Create a Site in the Helm portal, copy th
 - Single-use is enforced **server-side by the portal** (the plugin POSTs the `jti` back to claim it); the plugin never trusts the signature alone.
 - No matching local user → silent redirect to `wp-login.php`. Users are never auto-created.
 
+### Health check
+
+The portal polls an authenticated health route to confirm remote login is still available:
+
+- REST route: `GET /wp-json/perimetre-wp-tools/v1/health` with an `Authorization: Bearer <api key>` header.
+- A `401` means the API key no longer matches (login would fail); a network error / `404` means the site is down or the plugin is missing/inactive (unreachable).
+- A `200` returns `{ "ok": true, "enabled": <bool>, "connected_at": <string>, "wp_version": <string>, "plugin_version": <string> }`. `enabled: false` means the feature is turned off (login would fail); `enabled: true` means a login would succeed for a matching WP user.
+- Version fields are only returned after the key check passes — unauthenticated callers get no site details.
+
 > **Portal contract:** the portal builds the callback URL from the `perimetre-wp-tools/v1` REST namespace. If you change it, update the portal in lockstep.
 
 ---
@@ -80,9 +89,13 @@ When bumping the version, update all three locations:
 
 ## Current Version
 
-**1.0.5**
+**1.0.6**
 
 ## Changelog
+
+### 1.0.6
+
+- **Added an authenticated `/health` REST route for portal availability monitoring.** `GET /wp-json/perimetre-wp-tools/v1/health` authenticates via an `Authorization: Bearer <api key>` header (compared to the stored key in constant time) and returns `{ ok, enabled, connected_at, wp_version, plugin_version }`. The portal polls it to distinguish a healthy connection from an unauthorized (key mismatch), disabled, or unreachable site — a `200` proves the shared secret still matches, so a remote login would succeed. Version details are only exposed after the key check passes.
 
 ### 1.0.5
 
