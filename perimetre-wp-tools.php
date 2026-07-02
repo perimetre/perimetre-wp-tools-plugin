@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Perimetre WP Tools
  * Description: Status / health-check endpoint and Helm portal remote login for Perimetre WordPress sites.
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: Perimetre
  * Author URI: https://perimetre.co
  * Requires at least: 6.4
@@ -18,7 +18,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-define('PERIMETRE_WP_TOOLS_VERSION', '1.0.5');
+define('PERIMETRE_WP_TOOLS_VERSION', '1.0.6');
 define('PERIMETRE_WP_TOOLS_FILE', __FILE__);
 define('PERIMETRE_WP_TOOLS_PATH', plugin_dir_path(__FILE__));
 define('PERIMETRE_WP_TOOLS_URL', plugin_dir_url(__FILE__));
@@ -27,6 +27,7 @@ require_once PERIMETRE_WP_TOOLS_PATH . 'vendor/autoload.php';
 
 use Perimetre\WpTools\Plugin;
 use Perimetre\WpTools\RemoteLogin\Endpoint as RemoteLoginEndpoint;
+use Perimetre\WpTools\RemoteLogin\Health as RemoteLoginHealth;
 use Perimetre\WpTools\RemoteLogin\Settings as RemoteLoginSettings;
 use Perimetre\WpTools\Status\Endpoint as StatusEndpoint;
 use Perimetre\WpTools\Status\Settings as StatusSettings;
@@ -61,6 +62,7 @@ StatusEndpoint::register();
  */
 RemoteLoginSettings::register();
 RemoteLoginEndpoint::register();
+RemoteLoginHealth::register();
 
 /**
  * Schedule cron and flush rewrite rules on activation.

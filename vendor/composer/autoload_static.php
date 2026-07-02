@@ -31,6 +31,7 @@ class ComposerStaticInitPerimetreWpTools
         'Perimetre\\WpTools\\RemoteLogin\\Auth' => __DIR__ . '/../..' . '/src/RemoteLogin/Auth.php',
         'Perimetre\\WpTools\\RemoteLogin\\Connect' => __DIR__ . '/../..' . '/src/RemoteLogin/Connect.php',
         'Perimetre\\WpTools\\RemoteLogin\\Endpoint' => __DIR__ . '/../..' . '/src/RemoteLogin/Endpoint.php',
+        'Perimetre\\WpTools\\RemoteLogin\\Health' => __DIR__ . '/../..' . '/src/RemoteLogin/Health.php',
         'Perimetre\\WpTools\\RemoteLogin\\Settings' => __DIR__ . '/../..' . '/src/RemoteLogin/Settings.php',
         'Perimetre\\WpTools\\RemoteLogin\\Token' => __DIR__ . '/../..' . '/src/RemoteLogin/Token.php',
         'Perimetre\\WpTools\\Status\\Endpoint' => __DIR__ . '/../..' . '/src/Status/Endpoint.php',

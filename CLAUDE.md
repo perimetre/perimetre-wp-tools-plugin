@@ -41,6 +41,8 @@ git tag v1.0.0 && git push origin v1.0.0
 
 **`RemoteLogin\Settings`** — adds the Remote Login tab: enable toggle, portal URL, API key. There is no separate "Connect" button — saving the form is the single action, and `RemoteLogin\Connect::do_connect()` fires automatically on the post-save admin page load (gated on `?tab=remote-login` so saving the Status tab never triggers a handshake). The REST route `/wp-json/perimetre-wp-tools/v1/remote-login` is registered by `RemoteLogin\Endpoint`; HMAC verification (`RemoteLogin\Token`), the single-use callback to the portal, and `wp_set_auth_cookie` live in `RemoteLogin\Auth`. Single-use is enforced server-side by the portal — the plugin never trusts the signature alone.
 
+**`RemoteLogin\Health`** — registers the authenticated `/wp-json/perimetre-wp-tools/v1/health` route (`WP_REST_Server::READABLE`) on the same `Endpoint::NAMESPACE`. Its `permission_callback` compares an `Authorization: Bearer <key>` header to `Settings::get_api_key()` with `hash_equals` (both sides must be non-empty — `hash_equals('', '')` is `true`, so an unconnected site would otherwise authenticate an empty token). A `200` returns `{ ok, enabled, connected_at, wp_version, plugin_version }` so the portal can tell a healthy connection from an unauthorized (401), disabled (`enabled:false`), or unreachable (network error / 404) site. Version details stay behind the auth check.
+
 > **Portal contract:** the portal builds the remote-login callback URL from the `perimetre-wp-tools/v1` REST namespace (`RemoteLogin\Endpoint::NAMESPACE`). Changing it requires a coordinated portal update and a re-save/reconnect on any already-connected site.
 
 ## Coding Standards

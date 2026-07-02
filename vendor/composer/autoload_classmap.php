@@ -12,6 +12,7 @@ return array(
     'Perimetre\\WpTools\\RemoteLogin\\Auth' => $baseDir . '/src/RemoteLogin/Auth.php',
     'Perimetre\\WpTools\\RemoteLogin\\Connect' => $baseDir . '/src/RemoteLogin/Connect.php',
     'Perimetre\\WpTools\\RemoteLogin\\Endpoint' => $baseDir . '/src/RemoteLogin/Endpoint.php',
+    'Perimetre\\WpTools\\RemoteLogin\\Health' => $baseDir . '/src/RemoteLogin/Health.php',
     'Perimetre\\WpTools\\RemoteLogin\\Settings' => $baseDir . '/src/RemoteLogin/Settings.php',
     'Perimetre\\WpTools\\RemoteLogin\\Token' => $baseDir . '/src/RemoteLogin/Token.php',
     'Perimetre\\WpTools\\Status\\Endpoint' => $baseDir . '/src/Status/Endpoint.php',
