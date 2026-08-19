@@ -45,6 +45,15 @@ git tag v1.0.0 && git push origin v1.0.0
 
 > **Portal contract:** the portal builds the remote-login callback URL from the `perimetre-wp-tools/v1` REST namespace (`RemoteLogin\Endpoint::NAMESPACE`). Changing it requires a coordinated portal update and a re-save/reconnect on any already-connected site.
 
+**Remote login deliberately bypasses WP-side login hardening — by design, not a gap.** `Auth::handle` calls `wp_set_current_user()` + `wp_set_auth_cookie()` directly instead of going through `wp_authenticate`, which is what makes a portal login possible at all (there is no password to authenticate with). Consequently nothing hooking the authentication filters applies: 2FA plugins, login rate limiters, lockout rules and "hide wp-login.php" plugins are all bypassed, as are IP allowlists scoped to `wp-login.php` — the REST route is a separate, always-public endpoint. Sign-in security for these users is the Helm portal's job instead; centralising it there is the point. Two consequences worth keeping in mind:
+
+- **Don't "fix" this by routing through `wp_authenticate`.** The flow assumes no local credential exists.
+- **The compensating control lives in Helm**, so anything weakening the portal's own session security is more serious than it looks in isolation.
+
+As of v1.0.7 the tradeoff is stated on the Remote Login settings tab, since that's the screen where a site owner turns the feature on. `do_action('wp_login', …)` *is* fired, so audit-logging plugins record the session normally.
+
+The auth cookie's `Secure` flag comes from `Auth::is_secure_request()`, not bare `is_ssl()` — see the docblock there; `is_ssl()` is false behind a TLS-terminating proxy unless wp-config.php derives it from `X-Forwarded-Proto`, which silently produced non-Secure session cookies before v1.0.7.
+
 ## Coding Standards
 
 - **PSR-12** style, **PSR-4** autoloading under the `Perimetre\WpTools\` namespace, mapped to `src/`
