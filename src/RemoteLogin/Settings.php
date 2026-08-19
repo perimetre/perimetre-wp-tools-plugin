@@ -111,6 +111,22 @@ final class Settings
                 'perimetre-wp-tools'
             ) .
             '</p>';
+
+        // Surfaced here rather than only in the README because this is the screen
+        // where someone turns the feature on, and it changes the site's security
+        // model: a portal login establishes the WP session directly, so it never
+        // passes through the filters that login-hardening plugins hook.
+        echo '<p><strong>' . esc_html__('Before enabling:', 'perimetre-wp-tools') . '</strong> ' .
+            esc_html__(
+                'a portal login signs the user in without going through this site’s login form. ' .
+                'Two-factor prompts, login rate limiting, lockout rules and custom or hidden ' .
+                'login URLs therefore do not apply to it — sign-in security for these users is ' .
+                'enforced by the Helm portal instead, which is also where their accounts and ' .
+                'per-site access are managed. Every remote login still fires the standard ' .
+                'wp_login action, so audit-logging plugins record the session as usual.',
+                'perimetre-wp-tools'
+            ) .
+            '</p>';
     }
 
     public static function render_enabled_field(): void

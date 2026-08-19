@@ -47,11 +47,49 @@ final class Auth
 
         wp_clear_auth_cookie();
         wp_set_current_user($user->ID);
-        wp_set_auth_cookie($user->ID, false, is_ssl());
+        wp_set_auth_cookie($user->ID, false, self::is_secure_request());
         do_action('wp_login', $user->user_login, $user);
 
         wp_safe_redirect(admin_url());
         exit;
+    }
+
+    /**
+     * Whether the auth cookie may be marked `Secure`.
+     *
+     * `is_ssl()` alone is not enough here. It reads `$_SERVER['HTTPS']` /
+     * `SERVER_PORT`, so on a site behind a TLS-terminating proxy — Cloudflare, a
+     * load balancer, most managed hosts — it returns false unless wp-config.php
+     * has been set up to derive it from `X-Forwarded-Proto`. The cookie was then
+     * issued without `Secure`, meaning the browser would attach a live admin
+     * session to any plain-HTTP request to the site: one downgraded asset,
+     * typed URL, or on-path redirect is enough to leak it.
+     *
+     * A remote login always originates from the portal over HTTPS, so the
+     * forwarded header is trusted here the same way WordPress core trusts it
+     * once `$_SERVER['HTTPS']` is set. Falling back to the site's own home URL
+     * covers the proxy that forwards no protocol header at all.
+     */
+    private static function is_secure_request(): bool
+    {
+        if (is_ssl()) {
+            return true;
+        }
+
+        $forwarded = strtolower(trim((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')));
+        // A proxy chain can send a comma-separated list; the first entry is the
+        // scheme the client actually used.
+        if ($forwarded !== '' && str_starts_with($forwarded, 'https')) {
+            return true;
+        }
+
+        if (strtolower(trim((string) ($_SERVER['HTTP_X_FORWARDED_SSL'] ?? ''))) === 'on') {
+            return true;
+        }
+
+        // Last resort: if the site itself is configured as https, a cookie
+        // without Secure is wrong regardless of how this request arrived.
+        return str_starts_with(strtolower((string) home_url()), 'https://');
     }
 
     /**

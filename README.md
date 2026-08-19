@@ -89,9 +89,14 @@ When bumping the version, update all three locations:
 
 ## Current Version
 
-**1.0.6**
+**1.0.7**
 
 ## Changelog
+
+### 1.0.7
+
+- **The remote-login auth cookie is now always marked `Secure` on HTTPS sites.** The cookie's secure flag came from `is_ssl()` alone, which reads `$_SERVER['HTTPS']`/`SERVER_PORT` and so returns false on a site behind a TLS-terminating proxy (Cloudflare, a load balancer, most managed hosts) unless `wp-config.php` derives it from `X-Forwarded-Proto`. On those sites a remote login issued a session cookie without `Secure`, which the browser would then attach to any plain-HTTP request to the site. The flag is now also derived from `X-Forwarded-Proto` / `X-Forwarded-SSL`, falling back to the site's own `home_url()` scheme.
+- **The Remote Login settings tab now states what enabling it means.** A portal login establishes the WP session directly and so does not pass through the login form's filters: two-factor prompts, rate limiting, lockout rules and hidden login URLs do not apply to it (sign-in security is enforced by the Helm portal instead). This is by design and unchanged — it is now stated on the screen where the feature is turned on, rather than only implied. Remote logins continue to fire the standard `wp_login` action, so audit-logging plugins are unaffected.
 
 ### 1.0.6
 
