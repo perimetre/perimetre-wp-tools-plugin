@@ -52,6 +52,7 @@ Enable it on the **Remote Login** tab. Create a Site in the Helm portal, copy th
 The portal polls an authenticated health route to confirm remote login is still available:
 
 - REST route: `GET /wp-json/perimetre-wp-tools/v1/health` with an `Authorization: Bearer <api key>` header.
+- Sites behind an HTTP Basic auth gate (a staging `.htpasswd`) send the key in an `X-Perimetre-Wp-Tools-Key` header instead, because the web server's own prompt claims `Authorization` and a request only carries one. Bearer still wins when both are sent.
 - A `401` means the API key no longer matches (login would fail); a network error / `404` means the site is down or the plugin is missing/inactive (unreachable).
 - A `200` returns `{ "ok": true, "enabled": <bool>, "connected_at": <string>, "wp_version": <string>, "plugin_version": <string> }`. `enabled: false` means the feature is turned off (login would fail); `enabled: true` means a login would succeed for a matching WP user.
 - Version fields are only returned after the key check passes — unauthenticated callers get no site details.
@@ -89,9 +90,13 @@ When bumping the version, update all three locations:
 
 ## Current Version
 
-**1.0.7**
+**1.0.8**
 
 ## Changelog
+
+### 1.0.8
+
+- **The `/health` route now also accepts the API key in an `X-Perimetre-Wp-Tools-Key` header.** A site behind an HTTP Basic auth gate — the `.htpasswd` prompt that commonly guards a staging tier — cannot be polled with `Authorization: Bearer <key>`, because the web server claims the `Authorization` header for its own `Basic` credentials and a request carries only one of them. The portal therefore gives `Authorization` to the gate and sends the key in this header instead; the value is compared to the stored key in constant time exactly as before. Nothing changes for a site without a gate: `Authorization: Bearer` is still read first, and still wins when both are present.
 
 ### 1.0.7
 
