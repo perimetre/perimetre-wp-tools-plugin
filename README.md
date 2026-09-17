@@ -40,7 +40,13 @@ When the endpoint is disabled no rewrite rule is registered, so the plugin stays
 
 ## Remote Login
 
-Enable it on the **Remote Login** tab. Create a Site in the Helm portal, copy the API key it shows once, paste it in, set the portal URL, and click **Save** — saving is the single action that both persists settings and runs the portal handshake.
+Enable it on the **Remote Login** tab, paste the portal's **enrollment key**, and click **Save** — saving is the single action that persists settings and registers the site.
+
+The enrollment key lives in Helm under **Portal settings**. It is portal-wide, long-lived and the same for every site: there is nothing to create in the portal first, and no per-site key to copy. This site reports its own URL and name, and the portal returns the API key it should use from then on.
+
+Pasting an enrollment key on a site the portal already knows **reconnects** it — same record, fresh API key — which is how to recover a site whose stored key no longer matches.
+
+The portal address is built into the plugin (`Settings::PORTAL_URL`). Override it with `define('PERIMETRE_HELM_URL', '…')` in `wp-config.php` when working against a local portal.
 
 - REST route: `GET /wp-json/perimetre-wp-tools/v1/remote-login?token=<signed token>`
 - Tokens are compact-JWT-style, HMAC-SHA256 signed with the site's API key.
@@ -90,9 +96,19 @@ When bumping the version, update all three locations:
 
 ## Current Version
 
-**1.0.8**
+**1.0.9**
 
 ## Changelog
+
+### 1.0.9
+
+- **Registering a site is now one paste.** The Remote Login tab has an **Enrollment key** box: copy the portal-wide key from Helm's **Portal settings**, paste it here, tick Enable, and save. The site registers *itself* — it reports its own URL and name, and the portal creates the Site record and returns this site's own API key, which the plugin stores. Nothing has to be created in the portal first and there is no per-site key to copy. The same enrollment key works for every site.
+- **Pasting an enrollment key also reconnects a broken site.** If the portal already has a record for this site's URL, enrolling re-registers it: same record, fresh API key. That is the recovery path when the stored key no longer matches (the portal reports "API key mismatch"), when the plugin has been reinstalled, or when a database restore lost the settings. The box stays available after the first connection for exactly this reason.
+- **The enrollment key is used once and discarded.** It is read on the save that follows the paste and deleted from `wp_options` in the same request, whether or not registration succeeded — it is a live credential with no further use, and leaving a failed one behind would silently retry it on every later save.
+- **The Portal URL field is gone; the portal address is now built in.** There is one Helm, and making every install carry its address was a field to get wrong for no benefit — a typo produced a connection failure that looked like a bad key. Override with `define('PERIMETRE_HELM_URL', 'http://localhost:3000')` in `wp-config.php` when developing against a local portal. The legacy `perimetre_remote_login_portal_url` option is no longer read; it is left in place rather than deleted.
+- **The API key field remains** for sites connected before enrollment existed, and as a manual fallback. It is filled in automatically when you enroll.
+
+> Requires Helm with `/api/sites/enroll` (portal enrollment key). Against an older portal the enrollment box returns a 404 and the API key path still works.
 
 ### 1.0.8
 
