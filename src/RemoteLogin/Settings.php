@@ -11,18 +11,46 @@ use Perimetre\WpTools\Admin\Tabs;
  * page (owned by Status\Settings).
  *
  * Saving the form is the single "do everything" action: WP persists the
- * options, then we POST to the portal's /api/sites/connect on the same
- * round-trip and surface the result as an admin notice. There is no
- * separate Connect button — that split caused stale-value bugs where the
- * button ran the handshake against the previously stored credentials
- * because the user hadn't saved the form yet.
+ * options, then we call the portal on the same round-trip and surface the
+ * result as an admin notice. There is no separate Connect button — that split
+ * caused stale-value bugs where the button ran the handshake against the
+ * previously stored credentials because the user hadn't saved the form yet.
+ *
+ * Two ways in, and the first is the one to use:
+ *
+ *   - **Enrollment key** — paste the portal-wide key from Helm's Portal
+ *     settings and save. The site registers itself (`Enroll`), the portal hands
+ *     back this site's own API key, and the pasted key is discarded. Works for
+ *     a brand-new site and for reconnecting one that lost its credentials.
+ *   - **API key** — paste a per-site key an admin copied out of the portal's
+ *     Site record and save, which runs the original `Connect` handshake. Kept
+ *     for sites connected before enrollment existed and as a manual fallback.
+ *
+ * The portal URL is NOT a setting: there is one Helm, and typing its address
+ * into every site was a field to get wrong for no benefit. See `PORTAL_URL`.
  */
 final class Settings
 {
-    public const OPTION_ENABLED      = 'perimetre_remote_login_enabled';
-    public const OPTION_PORTAL_URL   = 'perimetre_remote_login_portal_url';
-    public const OPTION_API_KEY      = 'perimetre_remote_login_api_key';
-    public const OPTION_CONNECTED_AT = 'perimetre_remote_login_connected_at';
+    public const OPTION_ENABLED        = 'perimetre_remote_login_enabled';
+    public const OPTION_API_KEY        = 'perimetre_remote_login_api_key';
+    public const OPTION_CONNECTED_AT   = 'perimetre_remote_login_connected_at';
+    public const OPTION_ENROLLMENT_KEY = 'perimetre_remote_login_enrollment_key';
+
+    /**
+     * The Helm portal. Hardcoded because there is exactly one, forever: making
+     * every site carry its address was a field an admin had to paste correctly
+     * on every install, for no benefit, and getting it wrong produced a
+     * connection failure that looked like a bad key.
+     *
+     * Overridable with `define('PERIMETRE_HELM_URL', 'http://localhost:3000')`
+     * in wp-config.php — needed to develop against a local portal or a preview
+     * deployment, and the only reason this isn't a bare constant.
+     *
+     * The legacy `perimetre_remote_login_portal_url` option is no longer read.
+     * It is left in wp_options rather than deleted: it is inert, and an upgrade
+     * that silently drops data an admin typed is worse than a stale row.
+     */
+    public const PORTAL_URL = 'https://helm.perimetre.co';
 
     /**
      * Slug used both as this tab's `do_settings_sections` page (lets
@@ -66,15 +94,15 @@ final class Settings
             self::SECTION_ID
         );
 
-        register_setting(self::SECTION_PAGE, self::OPTION_PORTAL_URL, [
+        register_setting(self::SECTION_PAGE, self::OPTION_ENROLLMENT_KEY, [
             'type'              => 'string',
             'default'           => '',
-            'sanitize_callback' => [self::class, 'sanitize_url'],
+            'sanitize_callback' => [self::class, 'sanitize_enrollment_key'],
         ]);
         add_settings_field(
-            self::OPTION_PORTAL_URL,
-            __('Portal URL', 'perimetre-wp-tools'),
-            [self::class, 'render_portal_url_field'],
+            self::OPTION_ENROLLMENT_KEY,
+            __('Enrollment key', 'perimetre-wp-tools'),
+            [self::class, 'render_enrollment_key_field'],
             self::SECTION_PAGE,
             self::SECTION_ID
         );
@@ -106,8 +134,8 @@ final class Settings
         echo '<p>' .
             esc_html__(
                 'Allow users registered in the Helm portal to sign in as their matching WP user. ' .
-                'Create a Site in the portal, copy the API key it shows, paste it here, then click Save. ' .
-                'The plugin will connect to the portal automatically.',
+                'Tick Enable, paste the portal’s enrollment key below, then click Save — this site ' .
+                'registers itself and there is nothing to set up in the portal first.',
                 'perimetre-wp-tools'
             ) .
             '</p>';
@@ -139,13 +167,25 @@ final class Settings
         );
     }
 
-    public static function render_portal_url_field(): void
+    public static function render_enrollment_key_field(): void
     {
-        $value = self::get_portal_url();
         printf(
-            '<input type="url" name="%s" value="%s" class="regular-text" placeholder="https://helm.example.com" />',
-            esc_attr(self::OPTION_PORTAL_URL),
-            esc_attr($value)
+            '<input type="password" name="%s" value="" class="regular-text" autocomplete="off" placeholder="%s" />',
+            esc_attr(self::OPTION_ENROLLMENT_KEY),
+            esc_attr__('Paste the enrollment key from Helm', 'perimetre-wp-tools')
+        );
+        echo '<p class="description">' .
+            esc_html__(
+                'In Helm: Portal settings → Copy enrollment key. The same key works for every site. ' .
+                'Paste it here to register this site — or to reconnect it if it has been ' .
+                'disconnected. It is used once and then discarded; the API key below is filled in ' .
+                'for you.',
+                'perimetre-wp-tools'
+            ) . '</p>';
+        printf(
+            '<p class="description">%s <code>%s</code></p>',
+            esc_html__('Portal:', 'perimetre-wp-tools'),
+            esc_html(self::get_portal_url())
         );
     }
 
@@ -162,7 +202,9 @@ final class Settings
         );
         echo '<p class="description">' .
             esc_html__(
-                'Sensitive. Stored in wp_options. The portal shows the key exactly once on Site creation — regenerate the Site in the portal if lost.',
+                'Filled in automatically when you enroll. Sensitive, stored in wp_options, and ' .
+                'unique to this site. Only paste one here if you are connecting the old way with ' .
+                'a key copied from the portal’s Site record.',
                 'perimetre-wp-tools'
             ) . '</p>';
     }
@@ -178,11 +220,19 @@ final class Settings
                 esc_html($connected_at)
             );
             echo '<p class="description">' .
-                esc_html__('Saving will re-run the handshake automatically.', 'perimetre-wp-tools') .
+                esc_html__(
+                    'Saving re-runs the handshake. If this site ever stops working — the portal ' .
+                    'reports an API key mismatch, or these settings were lost — paste a fresh ' .
+                    'enrollment key above and save to reconnect it.',
+                    'perimetre-wp-tools'
+                ) .
                 '</p>';
         } else {
             echo '<span style="color:#6b7280;font-size:14px;">○ </span>';
-            echo esc_html__('Not yet connected. Click Save Changes to connect.', 'perimetre-wp-tools');
+            echo esc_html__(
+                'Not yet connected. Paste an enrollment key above and click Save Changes.',
+                'perimetre-wp-tools'
+            );
         }
     }
 
@@ -216,13 +266,45 @@ final class Settings
         if (! self::is_enabled()) {
             return;
         }
-        if (self::get_portal_url() === '' || self::get_api_key() === '') {
-            set_transient(self::AUTO_NOTICE_KEY, 'missing', 60);
+
+        // An enrollment key wins when one was just pasted: it is the path that
+        // works whether or not this site already has credentials, and it is the
+        // only way to recover a site whose stored key no longer matches.
+        $enrollment_key = self::take_enrollment_key();
+        if ($enrollment_key !== '') {
+            set_transient(self::AUTO_NOTICE_KEY, Enroll::do_enroll($enrollment_key), 60);
             return;
         }
 
-        $result = Connect::do_connect();
-        set_transient(self::AUTO_NOTICE_KEY, $result, 60);
+        if (self::get_api_key() === '') {
+            set_transient(self::AUTO_NOTICE_KEY, ['code' => 'missing', 'message' => ''], 60);
+            return;
+        }
+
+        set_transient(
+            self::AUTO_NOTICE_KEY,
+            ['code' => Connect::do_connect(), 'message' => ''],
+            60
+        );
+    }
+
+    /**
+     * Reads the just-saved enrollment key and deletes it in the same breath.
+     *
+     * It is a live credential and it is single-purpose: once the registration
+     * request has been made it has no further use, so it should not sit in
+     * wp_options where a database dump or an options-editor plugin would carry
+     * it. Deleted whether or not the attempt succeeds — re-copying it from Helm
+     * is one click, and leaving a failed key behind would silently retry it on
+     * every later save.
+     */
+    private static function take_enrollment_key(): string
+    {
+        $key = trim((string) get_option(self::OPTION_ENROLLMENT_KEY, ''));
+        if ($key !== '') {
+            delete_option(self::OPTION_ENROLLMENT_KEY);
+        }
+        return $key;
     }
 
     public static function maybe_render_notices(): void
@@ -233,32 +315,68 @@ final class Settings
         }
 
         $stored = get_transient(self::AUTO_NOTICE_KEY);
-        if (! is_string($stored) || $stored === '') {
+        if (! is_array($stored) || ! isset($stored['code']) || ! is_string($stored['code'])) {
             return;
         }
         delete_transient(self::AUTO_NOTICE_KEY);
 
+        $code   = $stored['code'];
+        $detail = isset($stored['message']) && is_string($stored['message']) ? $stored['message'] : '';
+
         $messages = [
-            'connected' => [
+            'enrolled'     => [
+                'class' => 'notice-success',
+                'text'  => __('Registered with the Helm portal.', 'perimetre-wp-tools'),
+            ],
+            'reconnected'  => [
+                'class' => 'notice-success',
+                'text'  => __(
+                    'Reconnected to the Helm portal. This site already had a record there; ' .
+                    'its API key has been replaced.',
+                    'perimetre-wp-tools'
+                ),
+            ],
+            'enroll_failed' => [
+                'class' => 'notice-error',
+                'text'  => __('Enrollment failed.', 'perimetre-wp-tools'),
+            ],
+            'connected'    => [
                 'class' => 'notice-success',
                 'text'  => __('Connected to the Helm portal.', 'perimetre-wp-tools'),
             ],
-            'failed'    => [
+            'failed'       => [
                 'class' => 'notice-error',
-                'text'  => __('Connection to the Helm portal failed. Check the portal URL and API key, then save again.', 'perimetre-wp-tools'),
+                'text'  => __(
+                    'Connection to the Helm portal failed. Paste an enrollment key and save ' .
+                    'to reconnect this site.',
+                    'perimetre-wp-tools'
+                ),
             ],
-            'missing'   => [
+            'missing'      => [
                 'class' => 'notice-warning',
-                'text'  => __('Remote login is enabled but the portal URL or API key is missing.', 'perimetre-wp-tools'),
+                'text'  => __(
+                    'Remote login is enabled but this site has no credentials yet. ' .
+                    'Paste an enrollment key and save.',
+                    'perimetre-wp-tools'
+                ),
             ],
         ];
-        if (! isset($messages[$stored])) {
+        if (! isset($messages[$code])) {
             return;
         }
+
+        // The portal's own wording is appended for the failure cases — it says
+        // what is actually wrong ("must use https", "not a WordPress site"),
+        // which a fixed string here cannot.
+        $text = $messages[$code]['text'];
+        if ($detail !== '' && $code === 'enroll_failed') {
+            $text .= ' ' . $detail;
+        }
+
         printf(
             '<div class="notice %s is-dismissible"><p>%s</p></div>',
-            esc_attr($messages[$stored]['class']),
-            esc_html($messages[$stored]['text'])
+            esc_attr($messages[$code]['class']),
+            esc_html($text)
         );
     }
 
@@ -267,10 +385,9 @@ final class Settings
         return (bool) $value;
     }
 
-    public static function sanitize_url(mixed $value): string
+    public static function sanitize_enrollment_key(mixed $value): string
     {
-        $url = trim((string) $value);
-        return $url === '' ? '' : esc_url_raw($url);
+        return trim((string) $value);
     }
 
     /**
@@ -291,9 +408,15 @@ final class Settings
         return (bool) get_option(self::OPTION_ENABLED, false);
     }
 
+    /**
+     * The portal this site talks to. Hardcoded, with a wp-config override for
+     * local development — see `PORTAL_URL`. Never read from the database, so a
+     * stale option from an older install can't point a site at the wrong host.
+     */
     public static function get_portal_url(): string
     {
-        return rtrim((string) get_option(self::OPTION_PORTAL_URL, ''), '/');
+        $url = defined('PERIMETRE_HELM_URL') ? (string) constant('PERIMETRE_HELM_URL') : self::PORTAL_URL;
+        return rtrim(trim($url), '/');
     }
 
     public static function get_api_key(): string
