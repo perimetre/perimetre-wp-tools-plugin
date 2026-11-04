@@ -141,16 +141,15 @@ final class Settings
             '</p>';
 
         // Surfaced here rather than only in the README because this is the screen
-        // where someone turns the feature on, and it changes the site's security
-        // model: a portal login establishes the WP session directly, so it never
-        // passes through the filters that login-hardening plugins hook.
+        // where someone turns the feature on, and it changes how this site's login
+        // page and login plugins interact with portal logins.
         echo '<p><strong>' . esc_html__('Before enabling:', 'perimetre-wp-tools') . '</strong> ' .
             esc_html__(
-                'a portal login signs the user in without going through this site’s login form. ' .
-                'Two-factor prompts, login rate limiting, lockout rules and custom or hidden ' .
-                'login URLs therefore do not apply to it — sign-in security for these users is ' .
-                'enforced by the Helm portal instead, which is also where their accounts and ' .
-                'per-site access are managed. Every remote login still fires the standard ' .
+                'a portal login finishes on this site’s login page, without a password. If the site ' .
+                'uses WP Umbrella’s two-factor authentication, the user enters their code there. Any ' .
+                'other two-factor plugin, or a plugin that adds a login step such as a CAPTCHA or a ' .
+                'lockout rule, refuses portal logins, and the login page says why. IP rules on the ' .
+                'login page apply to portal logins too. Every remote login fires the standard ' .
                 'wp_login action, so audit-logging plugins record the session as usual.',
                 'perimetre-wp-tools'
             ) .
