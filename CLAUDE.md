@@ -31,11 +31,12 @@ git tag v1.0.0 && git push origin v1.0.0
 2. `PERIMETRE_WP_TOOLS_VERSION` constant in `perimetre-wp-tools.php`
 3. **Current Version** + **Changelog** sections in `README.md`
 
-**The release build is pinned.** It installs exactly what `composer.lock` records, and every action in
-`.github/workflows/` is referenced by full commit SHA with its version in a comment. Change a dependency or an
-action through a reviewed PR that updates the lock file or the SHA (Dependabot opens these weekly), never by
-switching back to a version label like `@v3`. Workflows default to read-only permissions; a job that must write
-declares it.
+**The release build's dependencies and actions are pinned.** It installs exactly what `composer.lock` records, and
+every action in `.github/workflows/` is referenced by full commit SHA with its version in a comment. Change a
+dependency or an action through a reviewed PR that updates the lock file or the SHA (Dependabot opens these weekly),
+never by switching back to a version label like `@v3`. Workflows default to read-only permissions; a job that must
+write declares it. A tag with a `-` (e.g. `v1.1.0-rc.1`) is published as a prerelease, which sites' update checker
+ignores, so test releases are safe.
 
 ## Architecture
 
