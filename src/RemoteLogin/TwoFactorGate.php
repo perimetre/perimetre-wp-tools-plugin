@@ -18,15 +18,18 @@ use WP_User;
  *     `wp_login` event, which Auth fires before creating the session, so the
  *     person gets the plugin's own code screen.
  *  2. **The `authenticate` check, per person.** Security suites whose 2FA is an
- *     optional module (Wordfence, Solid Security) aren't on the list: they
- *     check the code in WordPress's `authenticate` filter, and only for people
- *     who turned 2FA on. Running that filter on the already-identified user
- *     lets them object. Core's own checks pass an existing user through, so
- *     any error (2FA code, CAPTCHA, lockout) means some plugin wants more than
- *     identity, and the login is refused.
+ *     optional module (Wordfence, Solid Security) aren't on the list. Those
+ *     that check the code in WordPress's `authenticate` filter (Wordfence) only
+ *     do so for people who turned 2FA on. Running that filter on the
+ *     already-identified user, with their real username, lets them object.
+ *     Core's own checks pass an existing user through, so any error (2FA code,
+ *     CAPTCHA, lockout) means some plugin wants more than identity, and the
+ *     login is refused. Limit: there is no password to pass, so a plugin that
+ *     only checks when a password is present won't object here.
  *
- * A 2FA plugin that hooks `wp_login` and is on neither list still enforces its
- * 2FA through that same event, so it fails safe too.
+ * Suites and unlisted plugins that run their 2FA on the `wp_login` event are
+ * handled by Auth: it fires that event before creating the session, and
+ * creates none if a plugin clears the auth cookie during it.
  */
 final class TwoFactorGate
 {
@@ -66,7 +69,7 @@ final class TwoFactorGate
             }
         }
 
-        $checked = apply_filters('authenticate', $user, '', '');
+        $checked = apply_filters('authenticate', $user, $user->user_login, '');
         if (! $checked instanceof WP_User || $checked->ID !== $user->ID) {
             return self::LOGIN_CHECK;
         }

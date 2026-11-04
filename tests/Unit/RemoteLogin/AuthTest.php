@@ -128,6 +128,24 @@ final class AuthTest extends TestCase
         self::assertSame(['wp_login'], $this->events, 'No session cookie before the 2FA plugin has checked the code');
     }
 
+    public function test_no_session_when_a_2fa_plugin_cancels_the_login_and_returns(): void
+    {
+        // Written for core's order (cookie, then event): clears the cookie to
+        // cancel the login and returns instead of exiting.
+        Actions\expectDone('wp_login')->once()->whenHappen(function (): void {
+            $this->events[] = 'wp_login';
+            do_action('clear_auth_cookie');
+        });
+
+        $redirect = $this->login();
+
+        self::assertSame(
+            'https://site.example/wp-login.php?perimetre_remote_login_refused=login_check',
+            $redirect->location
+        );
+        self::assertSame(['wp_login'], $this->events, 'The cancelled login must not get a session cookie');
+    }
+
     private function login(): Redirected
     {
         try {

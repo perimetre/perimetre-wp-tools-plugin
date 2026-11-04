@@ -50,7 +50,7 @@ final class Endpoint
      * to show its screen. Only the token is forwarded, never other request
      * parameters, so the route can't be used to redirect anywhere else.
      */
-    public static function handle(WP_REST_Request $request): void
+    public static function handle(WP_REST_Request $request): never
     {
         $token = (string) $request->get_param('token');
 

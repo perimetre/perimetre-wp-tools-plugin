@@ -63,7 +63,17 @@ final class Auth
         // code is entered. Because no session exists yet, a 2FA plugin that
         // fails half-way leaves the person logged out, never logged in without
         // the code. Audit plugins still record the login through this event.
+        $cleared_before = did_action('clear_auth_cookie');
         do_action('wp_login', $user->user_login, $user);
+
+        // A plugin written for core's order (cookie first, then `wp_login`)
+        // may cancel the login by clearing the cookie and *returning*, leaving
+        // the redirect to its own code screen to later hooks. Setting the
+        // cookie now would undo that cancellation, so a clear during the event
+        // means no session.
+        if (did_action('clear_auth_cookie') > $cleared_before) {
+            self::refuse(TwoFactorGate::LOGIN_CHECK);
+        }
 
         wp_set_auth_cookie($user->ID, false, self::is_secure_request());
         wp_safe_redirect(admin_url());

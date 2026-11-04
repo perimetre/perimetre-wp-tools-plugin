@@ -34,7 +34,7 @@ final class LoginPage
     public static function handle(): void
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the signed, single-use token is the credential
-        $token = isset($_GET['token']) ? (string) wp_unslash($_GET['token']) : '';
+        $token = isset($_GET['token']) && is_string($_GET['token']) ? wp_unslash($_GET['token']) : '';
         Auth::handle($token);
     }
 
@@ -57,7 +57,9 @@ final class LoginPage
     public static function add_refusal_message(WP_Error $errors): WP_Error
     {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display flag
-        $reason = isset($_GET[self::REFUSED_ARG]) ? sanitize_key((string) $_GET[self::REFUSED_ARG]) : '';
+        $reason = isset($_GET[self::REFUSED_ARG]) && is_string($_GET[self::REFUSED_ARG])
+            ? sanitize_key($_GET[self::REFUSED_ARG])
+            : '';
         if ($reason === '') {
             return $errors;
         }
