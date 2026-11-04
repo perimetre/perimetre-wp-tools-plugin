@@ -14,7 +14,10 @@
         "psr-4": {
             "Perimetre\\WpTools\\": "../src/",
             "Perimetre\\WpTools\\Tests\\": ""
-        }
+        },
+        "files": [
+            "Support/wordpress-classes.php"
+        ]
     },
     "config": {
         "sort-packages": true

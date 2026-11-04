@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace Perimetre\WpTools\RemoteLogin;
 
 /**
- * Orchestrates the remote-login flow:
+ * Orchestrates the remote-login flow, on the Site's login page (LoginPage):
  *   1. Verify the token's HMAC + expiry locally with the stored apiKey.
  *   2. POST the jti back to the portal (Authorization: Bearer apiKey) to
  *      atomically claim it (single-use).
  *   3. Look up the WP user by the email the portal returned.
- *   4. Set the auth cookie and redirect to wp-admin.
+ *   4. Check the Site's two-factor setup (TwoFactorGate); refuse if the
+ *      portal login can't honour it.
+ *   5. Fire `wp_login`, then set the auth cookie and redirect to wp-admin.
  *
  * Any failure short-circuits to wp-login.php with no error leak — we never
- * tell the caller why the attempt failed.
+ * tell the caller why the attempt failed. The one exception is a 2FA refusal,
+ * which says which plugin blocked it: the person has already been identified
+ * by the portal, and the message tells them what to do.
  */
 final class Auth
 {
@@ -45,11 +49,23 @@ final class Auth
             self::fail();
         }
 
+        $refusal = TwoFactorGate::refusal($user);
+        if ($refusal !== null) {
+            self::refuse($refusal);
+        }
+
         wp_clear_auth_cookie();
         wp_set_current_user($user->ID);
-        wp_set_auth_cookie($user->ID, false, self::is_secure_request());
+
+        // The event comes BEFORE the session cookie, on purpose. A 2FA plugin
+        // that hooks it (WP Umbrella) takes over the request here, shows its
+        // code screen and exits; it creates the session itself once a valid
+        // code is entered. Because no session exists yet, a 2FA plugin that
+        // fails half-way leaves the person logged out, never logged in without
+        // the code. Audit plugins still record the login through this event.
         do_action('wp_login', $user->user_login, $user);
 
+        wp_set_auth_cookie($user->ID, false, self::is_secure_request());
         wp_safe_redirect(admin_url());
         exit;
     }
@@ -145,6 +161,18 @@ final class Auth
     {
         nocache_headers();
         wp_safe_redirect(wp_login_url());
+        exit;
+    }
+
+    /**
+     * The Site's 2FA can't be honoured by a portal login: back to the login
+     * page, which explains why (LoginPage::add_refusal_message). No session
+     * was created.
+     */
+    private static function refuse(string $reason): never
+    {
+        nocache_headers();
+        wp_safe_redirect(LoginPage::refused_url($reason));
         exit;
     }
 }
