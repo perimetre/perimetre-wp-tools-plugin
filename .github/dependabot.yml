@@ -1,0 +1,13 @@
+# Proposes updates as pull requests, so pinned actions and locked
+# dependencies only change through a reviewed PR.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly

@@ -5,21 +5,32 @@ on:
     tags:
       - "v*.*.*"
 
+# Nothing gets write access unless a job asks for it below.
+permissions:
+  contents: read
+
 jobs:
   release:
     name: Build and release plugin zip
     runs-on: ubuntu-latest
+    # Creating the GitHub Release is the only write this workflow needs.
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
 
       - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: "8.3"
           tools: composer:v2
 
+      # Installs exactly what composer.lock pins: a new dependency release never
+      # reaches the zip without a reviewed lock-file change.
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
@@ -34,7 +45,7 @@ jobs:
           cd dist && zip -r perimetre-wp-tools-${{ steps.version.outputs.VERSION }}.zip perimetre-wp-tools/
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           name: "Perimetre WP Tools ${{ github.ref_name }}"
           files: dist/perimetre-wp-tools-${{ steps.version.outputs.VERSION }}.zip

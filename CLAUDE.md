@@ -31,6 +31,12 @@ git tag v1.0.0 && git push origin v1.0.0
 2. `PERIMETRE_WP_TOOLS_VERSION` constant in `perimetre-wp-tools.php`
 3. **Current Version** + **Changelog** sections in `README.md`
 
+**The release build is pinned.** It installs exactly what `composer.lock` records, and every action in
+`.github/workflows/` is referenced by full commit SHA with its version in a comment. Change a dependency or an
+action through a reviewed PR that updates the lock file or the SHA (Dependabot opens these weekly), never by
+switching back to a version label like `@v3`. Workflows default to read-only permissions; a job that must write
+declares it.
+
 ## Architecture
 
 **Entry point:** `perimetre-wp-tools.php` — loads the autoloader, registers the GitHub update checker, then bootstraps both modules unconditionally (each module gates its own behaviour behind its enable toggle). Status' `Endpoint::activate/deactivate` are wired to the activation/deactivation hooks to flush rewrite rules.
