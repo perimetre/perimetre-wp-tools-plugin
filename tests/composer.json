@@ -1,0 +1,22 @@
+{
+    "name": "perimetre/perimetre-wp-tools-tests",
+    "description": "Test tooling for Perimetre WP Tools. Kept apart from the plugin's own composer.json so the committed vendor/ and its autoloader never load test code.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.2"
+    },
+    "require-dev": {
+        "brain/monkey": "^2.6",
+        "phpunit/phpunit": "^11.5"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Perimetre\\WpTools\\": "../src/",
+            "Perimetre\\WpTools\\Tests\\": ""
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

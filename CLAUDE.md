@@ -15,7 +15,13 @@ composer install                       # Install dependencies + autoloader
 composer dump-autoload --optimize      # Regenerate autoloader after adding classes
 composer lint                          # Run phpcs (PSR-12)
 composer lint:fix                      # Auto-fix lint errors
+composer test                          # Run the PHPUnit tests (installs the test tooling first)
 ```
+
+**Tests** live in `tests/` with their own `composer.json`, never in the plugin's: the committed `vendor/` autoloader
+is what a site runs, and Brain Monkey and Mockery register files that load on every request. Don't add test tools
+to the root `composer.json`. Tests extend `Perimetre\WpTools\Tests\TestCase`, which sets up Brain Monkey; stub any
+WordPress function a test needs. CI (`.github/workflows/ci.yml`) runs lint and tests on every pull request.
 
 ## Releases
 
