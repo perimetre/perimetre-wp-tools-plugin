@@ -23,7 +23,9 @@
     },
     "scripts": {
         "lint": "phpcs",
-        "lint:fix": "phpcbf"
+        "lint:fix": "phpcbf",
+        "test:install": "@composer --working-dir=tests install",
+        "test": "tests/vendor/bin/phpunit --configuration tests/phpunit.xml.dist"
     },
     "config": {
         "optimize-autoloader": true,

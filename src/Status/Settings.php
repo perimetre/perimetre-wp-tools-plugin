@@ -169,9 +169,9 @@ final class Settings
         if ($conflict !== null) {
             $message = $conflict === 'page'
                 /* translators: %s: the conflicting URL path */
-                ? __('⚠ The path %s is already used by an existing page on this site, so the health-check endpoint is disabled to avoid breaking it. Choose a different slug.', 'perimetre-wp-tools')
+                ? __('⚠ The path %s is already used by an existing page on this site, so the health-check endpoint is disabled to avoid breaking it. Choose a different slug.', 'perimetre-wp-tools') // phpcs:ignore Generic.Files.LineLength.TooLong -- translatable string kept whole for extraction
                 /* translators: %s: the conflicting URL path */
-                : __('⚠ The path %s is already used by an existing category or term on this site, so the health-check endpoint is disabled to avoid breaking it. Choose a different slug.', 'perimetre-wp-tools');
+                : __('⚠ The path %s is already used by an existing category or term on this site, so the health-check endpoint is disabled to avoid breaking it. Choose a different slug.', 'perimetre-wp-tools'); // phpcs:ignore Generic.Files.LineLength.TooLong -- translatable string kept whole for extraction
 
             echo '<p class="description" style="color:#b32d2e;font-weight:600;">' . sprintf(
                 esc_html($message),
@@ -188,7 +188,7 @@ final class Settings
             esc_attr(self::OPTION_TOKEN),
             esc_attr($token)
         );
-        echo '<p class="description">' . esc_html__('Leave empty to auto-generate on save. Append as ?token=… to view detailed health checks.', 'perimetre-wp-tools') . '</p>';
+        echo '<p class="description">' . esc_html__('Leave empty to auto-generate on save. Append as ?token=… to view detailed health checks.', 'perimetre-wp-tools') . '</p>'; // phpcs:ignore Generic.Files.LineLength.TooLong -- translatable string kept whole for extraction
     }
 
     public static function sanitize_slug(mixed $value): string
