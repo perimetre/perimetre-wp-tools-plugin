@@ -49,9 +49,11 @@ Pasting an enrollment key on a site the portal already knows **reconnects** it �
 The portal address is built into the plugin (`Settings::PORTAL_URL`). Override it with `define('PERIMETRE_HELM_URL', '…')` in `wp-config.php` when working against a local portal.
 
 - REST route: `GET /wp-json/perimetre-wp-tools/v1/remote-login?token=<signed token>`
+- The route only redirects to the Site's login page (`wp-login.php?action=perimetre_remote_login&token=…`), where the login finishes. IP rules on the login page therefore apply to portal logins.
 - Tokens are compact-JWT-style, HMAC-SHA256 signed with the site's API key.
 - Single-use is enforced **server-side by the portal** (the plugin POSTs the `jti` back to claim it); the plugin never trusts the signature alone.
 - No matching local user → silent redirect to `wp-login.php`. Users are never auto-created.
+- **Two-factor authentication:** WP Umbrella's 2FA is supported — the person enters their code (or sets up their authenticator the first time) before any session exists. Any other 2FA, or any plugin that objects in WordPress's `authenticate` check for that person (2FA, CAPTCHA, lockout), refuses the portal login with a message on the login page. Nobody is ever asked for a WordPress password.
 
 ### Health check
 
@@ -103,9 +105,16 @@ When bumping the version, update all three locations:
 
 ## Current Version
 
-**1.0.9**
+**1.1.0**
 
 ## Changelog
+
+### 1.1.0
+
+- **Remote login now respects the site's two-factor authentication.** The portal's login link still points at the same REST route, which now hands the login to the site's own login page. Sites using WP Umbrella's 2FA ask for the code there (or for first-time authenticator setup) before any session exists. Any other 2FA plugin, or any plugin that objects in WordPress's `authenticate` check for that person, refuses the portal login and the login page says why. Nobody is ever asked for a WordPress password.
+- **Portal logins now pass through `wp-login.php`.** IP rules and "hide login" plugins on the login page apply to them; renamed login pages keep working. Sites with a login CAPTCHA or lockout plugin will refuse portal logins.
+- **`wp_login` now fires before the session cookie is set** (WordPress core does the reverse), so a 2FA plugin that takes over the login leaves no session behind.
+- Maintenance: automated tests run in CI alongside the lint, and the release build installs locked dependency versions with pinned actions.
 
 ### 1.0.9
 
