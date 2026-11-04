@@ -12,7 +12,8 @@ use WP_REST_Server;
  *
  *   GET /wp-json/perimetre-wp-tools/v1/remote-login?token=<signed token>
  *
- * Handled entirely by Auth::handle.
+ * It only hands the token on to the Site's login page (LoginPage), where
+ * Auth::handle finishes the login.
  */
 final class Endpoint
 {
@@ -43,9 +44,18 @@ final class Endpoint
         );
     }
 
-    public static function handle(WP_REST_Request $request): void
+    /**
+     * Hands the token to the Site's login page, where the login finishes
+     * (see LoginPage). Logs nobody in here: a 2FA plugin needs the login page
+     * to show its screen. Only the token is forwarded, never other request
+     * parameters, so the route can't be used to redirect anywhere else.
+     */
+    public static function handle(WP_REST_Request $request): never
     {
         $token = (string) $request->get_param('token');
-        Auth::handle($token);
+
+        nocache_headers();
+        wp_safe_redirect(LoginPage::url($token));
+        exit;
     }
 }

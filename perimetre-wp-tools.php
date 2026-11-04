@@ -28,6 +28,7 @@ require_once PERIMETRE_WP_TOOLS_PATH . 'vendor/autoload.php';
 use Perimetre\WpTools\Plugin;
 use Perimetre\WpTools\RemoteLogin\Endpoint as RemoteLoginEndpoint;
 use Perimetre\WpTools\RemoteLogin\Health as RemoteLoginHealth;
+use Perimetre\WpTools\RemoteLogin\LoginPage as RemoteLoginPage;
 use Perimetre\WpTools\RemoteLogin\Settings as RemoteLoginSettings;
 use Perimetre\WpTools\Status\Endpoint as StatusEndpoint;
 use Perimetre\WpTools\Status\Settings as StatusSettings;
@@ -62,6 +63,7 @@ StatusEndpoint::register();
  */
 RemoteLoginSettings::register();
 RemoteLoginEndpoint::register();
+RemoteLoginPage::register();
 RemoteLoginHealth::register();
 
 /**
