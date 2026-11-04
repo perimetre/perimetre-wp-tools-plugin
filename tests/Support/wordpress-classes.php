@@ -6,7 +6,7 @@
  * Brain Monkey, not here.
  *
  * phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses
- * phpcs:disable Squiz.Classes.ValidClassName.NotCamelCaps
+ * phpcs:disable Squiz.Classes.ValidClassName
  * phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
  */
 
