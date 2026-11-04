@@ -11,3 +11,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+
+  # Test tooling has its own composer.json and lock file (see tests/composer.json).
+  - package-ecosystem: composer
+    directory: /tests
+    schedule:
+      interval: weekly
