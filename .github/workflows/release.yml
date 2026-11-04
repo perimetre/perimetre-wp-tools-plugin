@@ -44,7 +44,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
           mkdir -p dist/perimetre-wp-tools
-          rsync -a --exclude='.git' --exclude='.github' --exclude='dist' --exclude='.DS_Store' --exclude='.gitignore' --exclude='CLAUDE.md' . dist/perimetre-wp-tools/
+          rsync -a --exclude='.git' --exclude='.github' --exclude='dist' --exclude='.DS_Store' --exclude='.gitignore' --exclude='CLAUDE.md' --exclude='/tests' . dist/perimetre-wp-tools/
           cd dist && zip -r "perimetre-wp-tools-${VERSION}.zip" perimetre-wp-tools/
 
       - name: Create GitHub Release

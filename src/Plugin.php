@@ -11,6 +11,10 @@ final class Plugin
 {
     public static function load_textdomain(): void
     {
-        load_plugin_textdomain('perimetre-wp-tools', false, dirname(plugin_basename(PERIMETRE_WP_TOOLS_FILE)) . '/languages');
+        load_plugin_textdomain(
+            'perimetre-wp-tools',
+            false,
+            dirname(plugin_basename(PERIMETRE_WP_TOOLS_FILE)) . '/languages'
+        );
     }
 }

@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Read-only: this workflow only checks code.
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    name: Lint and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+          coverage: none
+
+      # Rebuilds the plugin's vendor/ (committed) with its dev tools so phpcs is
+      # available; nothing from this job is committed back.
+      - name: Install plugin dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Lint (phpcs)
+        run: composer lint
+
+      # Test tooling lives in tests/ with its own composer.json, so it never
+      # enters the plugin's committed autoloader. `composer test` installs it.
+      - name: Test (PHPUnit)
+        run: composer test

@@ -10,3 +10,8 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Test tooling, installed by `composer test`. Never committed:
+# see tests/composer.json.
+tests/vendor/
+tests/.phpunit.result.cache

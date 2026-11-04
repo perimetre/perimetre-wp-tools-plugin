@@ -13,7 +13,11 @@
     </rule>
 
     <file>src/</file>
+    <file>tests/</file>
     <file>perimetre-wp-tools.php</file>
+
+    <!-- Test tooling installed by `composer test:install`; not our code -->
+    <exclude-pattern>tests/vendor/*</exclude-pattern>
 
     <arg name="colors"/>
     <arg value="sp"/>
