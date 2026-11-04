@@ -74,17 +74,16 @@ composer install                       # Install dependencies + autoloader
 composer dump-autoload --optimize      # Regenerate autoloader after adding classes
 composer lint                          # Run phpcs (PSR-12)
 composer lint:fix                      # Auto-fix lint errors
-composer test:install                  # Install the test tooling (once, into tests/vendor/)
-composer test                          # Run the PHPUnit tests
+composer test                          # Run the PHPUnit tests (installs the test tooling first)
 ```
 
 `vendor/` is committed (it contains only the generated autoloader).
 
 Tests live in `tests/`, with **their own `composer.json`** (PHPUnit and Brain Monkey). Keeping them apart means the
 test tools never enter the committed `vendor/` or its autoloader, so a site running the plugin straight from the
-repo never loads test code. `tests/vendor/` is git-ignored and `tests/` is left out of the release zip. Tests mock
-WordPress functions with Brain Monkey, so they run without a WordPress install. CI runs `composer lint` and
-`composer test` on every pull request.
+repo never loads test code. `composer test` installs them into `tests/vendor/`, which is git-ignored, and `tests/`
+is left out of the release zip. Tests mock WordPress functions with Brain Monkey, so they run without a WordPress
+install. CI runs `composer lint` and `composer test` on every pull request.
 
 ## Releases
 

@@ -15,8 +15,7 @@ composer install                       # Install dependencies + autoloader
 composer dump-autoload --optimize      # Regenerate autoloader after adding classes
 composer lint                          # Run phpcs (PSR-12)
 composer lint:fix                      # Auto-fix lint errors
-composer test:install                  # Install the test tooling (once, into tests/vendor/)
-composer test                          # Run the PHPUnit tests
+composer test                          # Run the PHPUnit tests (installs the test tooling first)
 ```
 
 **Tests** live in `tests/` with their own `composer.json`, never in the plugin's: the committed `vendor/` autoloader

@@ -36,9 +36,6 @@ jobs:
         run: composer lint
 
       # Test tooling lives in tests/ with its own composer.json, so it never
-      # enters the plugin's committed autoloader.
-      - name: Install test dependencies
-        run: composer test:install -- --no-interaction --no-progress
-
+      # enters the plugin's committed autoloader. `composer test` installs it.
       - name: Test (PHPUnit)
         run: composer test

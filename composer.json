@@ -25,7 +25,10 @@
         "lint": "phpcs",
         "lint:fix": "phpcbf",
         "test:install": "@composer --working-dir=tests install",
-        "test": "tests/vendor/bin/phpunit --configuration tests/phpunit.xml.dist"
+        "test": [
+            "@composer --working-dir=tests install --quiet --no-interaction",
+            "tests/vendor/bin/phpunit --configuration tests/phpunit.xml.dist"
+        ]
     },
     "config": {
         "optimize-autoloader": true,
